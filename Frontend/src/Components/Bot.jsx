@@ -44,7 +44,7 @@ function Bot() {
             const res = await axios.post("http://localhost:4002/bot/v1/message", {
                 text: userMessage
             }, {
-                timeout: 10000, // 10 second timeout
+                timeout: 3000, // 3 second timeout (backend responds in <100ms)
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
