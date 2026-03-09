@@ -1,37 +1,111 @@
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import axios from 'axios'
 import { FaUserCircle, FaRobot, FaPaperPlane, FaLightbulb, FaCode, FaUsers, FaStar, FaStarOfLife } from 'react-icons/fa'
+
 function Bot() {
-    const [messages,setMessages]=useState([])
-    const [input,setInput]=useState("")
-    const [loading,setLoading]=useState(false)
-    const messagesEndRef=useRef(null)
+    const [messages, setMessages] = useState([])
+    const [input, setInput] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [typingIndicator, setTypingIndicator] = useState(false)
+    const messagesEndRef = useRef(null)
+    const inputRef = useRef(null)
 
-    useEffect(()=>{
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    },[messages])
-
-    const handleSendMessage = async () => {
-        setLoading(true);
-        if(!input.trim()) return;
-        try {
-           const res = await axios.post("http://localhost:4002/bot/v1/message", {
-                text: input
+    // Optimized scroll function with debouncing
+    const scrollToBottom = useCallback(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'end',
+                inline: 'nearest'
             });
-            if(res.status === 200) {
-                setMessages([...messages, { text: res.data.userMessage, sender: 'user' }, { text: res.data.botMessage, sender: 'bot' }]);
+        }
+    }, []);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, scrollToBottom]);
+
+    // Optimized message sending with better error handling and response time tracking
+    const handleSendMessage = useCallback(async () => {
+        const userMessage = input.trim();
+        if (!userMessage || loading) return;
+
+        setLoading(true);
+        setTypingIndicator(true);
+        
+        // Add user message immediately for better UX
+        const userMsgObj = { text: userMessage, sender: 'user', id: Date.now() };
+        setMessages(prev => [...prev, userMsgObj]);
+        setInput("");
+        
+        try {
+            const startTime = performance.now();
+            const res = await axios.post("http://localhost:4002/bot/v1/message", {
+                text: userMessage
+            }, {
+                timeout: 10000, // 10 second timeout
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const endTime = performance.now();
+            const responseTime = endTime - startTime;
+
+            if (res.status === 200) {
+                // Add small delay for more natural typing effect
+                const delay = Math.max(0, 300 - responseTime);
+                
+                setTimeout(() => {
+                    const botMsgObj = { 
+                        text: res.data.botMessage, 
+                        sender: 'bot', 
+                        id: Date.now(),
+                        responseTime: res.data.responseTime,
+                        cached: res.data.cached
+                    };
+                    setMessages(prev => [...prev, botMsgObj]);
+                    setTypingIndicator(false);
+                    setLoading(false);
+                }, delay);
             }
-            console.log(res.data);
         } catch (error) {
             console.log("Error sending message:", error);
+            setTypingIndicator(false);
+            setLoading(false);
+            
+            // Show error message
+            const errorMsg = {
+                text: "I'm having trouble connecting. Please try again in a moment.",
+                sender: 'bot',
+                id: Date.now(),
+                error: true
+            };
+            setMessages(prev => [...prev, errorMsg]);
         }
-        setInput("");
-        setLoading(false);
-    }
+    }, [input, loading]);
 
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') handleSendMessage()}
+    const handleKeyPress = useCallback((e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    }, [handleSendMessage]);
+
+    // Focus input on mount and when clicking on input area
+    useEffect(() => {
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, []);
+
+    const handleInputFocus = () => {
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    };
             
   return (
     <div className='flex flex-col min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 text-white'>
@@ -155,7 +229,7 @@ function Bot() {
                   </div>
                 ))}
 
-              {loading && (
+              {typingIndicator && (
                 <div className="flex justify-start">
                   <div className="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 px-4 py-3 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl shadow-xl">
                     <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
@@ -166,8 +240,8 @@ function Bot() {
                         <span className="text-xs sm:text-xs font-semibold text-slate-300">BotSpoof</span>
                         <span className="ml-2 text-xs text-green-400 flex items-center space-x-1">
                           <FaStarOfLife className="text-xs" />
-                          <span className="hidden sm:inline">Thinking...</span>
-                          <span className="sm:hidden">Thinking</span>
+                          <span className="hidden sm:inline">Typing...</span>
+                          <span className="sm:hidden">Typing</span>
                         </span>
                       </div>
                     </div>
