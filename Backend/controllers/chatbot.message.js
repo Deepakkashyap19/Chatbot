@@ -73,6 +73,10 @@ const BOT_RESPONSES = {
       "what is nodejs?": "Node.js is a JavaScript runtime that allows running JS on the server side.",
       "what is mongodb?": "MongoDB is a NoSQL database that stores data in flexible JSON-like documents.",
       "what is javascript?": "JavaScript is a programming language used to make web pages interactive.",
+      "what is react ?": "React is a JavaScript library for building fast and interactive user interfaces.",
+      "what is nodejs ?": "Node.js is a JavaScript runtime that allows running JS on the server side.",
+      "what is mongodb ?": "MongoDB is a NoSQL database that stores data in flexible JSON-like documents.",
+      "what is javascript ?": "JavaScript is a programming language used to make web pages interactive.",
 
   // DEFAULT
   "default": "I'm not sure I understand. Could you please rephrase your question? I can help you with:\n- Technical interview questions\n- HR interview preparation\n- Programming concepts\n- Resume tips\n- Interview strategies\n- System design basics\n- Coding best practices\n- Career guidance"
