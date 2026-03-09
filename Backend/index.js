@@ -4,8 +4,8 @@ import mongoose from 'mongoose';
 import chatbotRoute from './routes/chatbot.route.js';
 import cors from "cors";
 
-// Load environment variables from the correct path
-dotenv.config({ path: 'C:\\Users\\Deepak kashyap\\Desktop\\chatbot\\Backend\\.env' });
+// Load environment variables
+dotenv.config();
 
 const app = express();
 app.use(express.json()); // Middleware to parse JSON bodies

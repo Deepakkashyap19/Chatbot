@@ -16,19 +16,18 @@ function Bot() {
         setLoading(true);
         if(!input.trim()) return;
         try {
-           const res=await axios.post("http://localhost:4002/bot/v1/message",{
+           const res = await axios.post("http://localhost:4002/bot/v1/message", {
                 text: input
-            })
+            });
             if(res.status === 200) {
                 setMessages([...messages, { text: res.data.userMessage, sender: 'user' }, { text: res.data.botMessage, sender: 'bot' }]);
-               
             }
-            console.log(res.data)
+            console.log(res.data);
         } catch (error) {
             console.log("Error sending message:", error);
         }
-         setInput("");
-            setLoading(false);
+        setInput("");
+        setLoading(false);
     }
 
     const handleKeyPress = (e) => {
